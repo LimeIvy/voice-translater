@@ -2,12 +2,13 @@ import { useRef, useState } from "react";
 import { MyIcon } from "./Icons";
 import LanguageSelect from "./LanguageSelect";
 import { Translation } from "./Translation";
+import { useTranslationStore } from "../store/translation";
 
 type Recognition = {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
-  onresult: ((event: Event & { results: SpeechRecognitionResultList }) => void) | null;
+  onresult: ((event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => void) | null;
   onerror: ((event: Event & { error: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
@@ -24,11 +25,12 @@ declare global {
 }
 
 function Mic() {
-  const [text, setText] = useState("");
+  const [interimText, setInterimText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [speechLanguage, setSpeechLanguage] = useState("ja-JP");
   const [translationLanguage, setTranslationLanguage] = useState("en-US");
   const recognitionRef = useRef<Recognition | null>(null);
+  const addSegment = useTranslationStore((state) => state.addSegment);
 
   const handleClick = () => {
     const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
@@ -38,25 +40,33 @@ function Mic() {
     }
 
     if (!recognitionRef.current) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.onresult = (event) => {
-        setText(Array.from(event.results).map((result) => result[0].transcript).join(""));
+      const recognition = new SpeechRecognition();
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognition.onresult = (event) => {
+        const finalChunks: string[] = [];
+        const interimChunks: string[] = [];
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const result = event.results[i];
+          if (result.isFinal) finalChunks.push(result[0].transcript.trim());
+          else interimChunks.push(result[0].transcript);
+        }
+        setInterimText(interimChunks.join(" "));
+        finalChunks.filter(Boolean).forEach(addSegment);
       };
-      console.log(speechLanguage);
-      recognitionRef.current.onerror = (event) => {
-        alert(`音声認識エラー: ${event.error}`);
+      recognition.onerror = (event) => {
+        if (event.error !== "no-speech" && event.error !== "aborted") alert(`音声認識エラー: ${event.error}`);
         setIsListening(false);
       };
-      recognitionRef.current.onend = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+      recognitionRef.current = recognition;
     }
 
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      setText("");
+      setInterimText("");
       recognitionRef.current.lang = speechLanguage;
       recognitionRef.current.start();
       setIsListening(true);
@@ -71,23 +81,14 @@ function Mic() {
         <p>翻訳言語</p>
         <LanguageSelect value={translationLanguage} onChange={setTranslationLanguage} />
       </div>
-
-      <p className="min-h-8 w-4/5 rounded border p-2" aria-live="polite">
-        {text || "認識した音声がここに表示されます"}
-      </p>
+      
       <Translation
-        text={text}
         sourceLanguage={speechLanguage}
         targetLanguage={translationLanguage}
+        interimText={interimText}
       />
-      <button
-        className="rounded-full bg-blue-600 px-4 py-2 text-white"
-        onClick={handleClick}
-      >
-        <MyIcon
-          name={isListening ? "mic-listening" : "mic-idle"}
-          color="white"
-        />
+      <button className="rounded-full bg-blue-600 px-2 py-2 text-white cursor-pointer" onClick={handleClick}>
+        <MyIcon name={isListening ? "mic-listening" : "mic-idle"} color="white" size={24} />
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { MyIcon } from "./Icons";
 import LanguageSelect from "./LanguageSelect";
+import { Translation } from "./Translation";
 
 type Recognition = {
   lang: string;
@@ -74,6 +75,11 @@ function Mic() {
       <p className="min-h-8 w-4/5 rounded border p-2" aria-live="polite">
         {text || "認識した音声がここに表示されます"}
       </p>
+      <Translation
+        text={text}
+        sourceLanguage={speechLanguage}
+        targetLanguage={translationLanguage}
+      />
       <button
         className="rounded-full bg-blue-600 px-4 py-2 text-white"
         onClick={handleClick}

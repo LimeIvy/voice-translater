@@ -2,9 +2,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from app.api.router import api_router
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
-# Load server/.env when running from the server directory, without overriding
-# environment variables explicitly provided by the process/container.
 load_dotenv()
 
 app = FastAPI()

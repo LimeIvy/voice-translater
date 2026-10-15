@@ -8,12 +8,14 @@ load_dotenv()
 
 app = FastAPI()
 
+allowed_origins = ["http://localhost:5173"]
+public_url = os.getenv("PUBLIC_URL", "").strip().rstrip("/")
+if public_url:
+    allowed_origins.append(public_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        os.getenv("PUBLIC_URL"),
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

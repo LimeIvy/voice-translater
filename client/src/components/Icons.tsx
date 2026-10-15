@@ -1,9 +1,11 @@
 import type { ComponentType } from "react";
-import { FaMicrophone, FaStop } from "react-icons/fa";
+import { FaMicrophone, FaStop, FaPlay, FaPause } from "react-icons/fa";
 
 const iconMap = {
   "mic-idle": FaMicrophone,
   "mic-listening": FaStop,
+  "play": FaPlay,
+  "pause": FaPause,
 } as const;
 
 export type IconName = keyof typeof iconMap;

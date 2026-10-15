@@ -1,0 +1,7 @@
+.venv
+.git
+__pycache__
+pretrained_models
+*.wav
+*.tar
+third_party/Matcha-TTS/data

@@ -1,0 +1,38 @@
+name: voice-translater
+
+services:
+  tts:
+    image: cosyvoice-tts:1.0
+
+    build:
+      context: ./tts
+      dockerfile: Dockerfile
+
+    shm_size: "2gb"
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    ports:
+      - "127.0.0.1:8765:8765"
+
+    volumes:
+      - type: bind
+        source: ./tts/pretrained_models
+        target: /app/pretrained_models
+        bind:
+          create_host_path: false
+
+      - type: bind
+        source: ./tts/reference-short.wav
+        target: /app/reference-short.wav
+        read_only: true
+        bind:
+          create_host_path: false
+
+    restart: unless-stopped

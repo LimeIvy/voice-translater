@@ -27,15 +27,20 @@ declare global {
 function Mic() {
   const [interimText, setInterimText] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [micError, setMicError] = useState("");
+  const permissionPendingRef = useRef(false);
   const [speechLanguage, setSpeechLanguage] = useState("ja-JP");
   const [translationLanguage, setTranslationLanguage] = useState("en-US");
   const recognitionRef = useRef<Recognition | null>(null);
   const addSegment = useTranslationStore((state) => state.addSegment);
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    if (permissionPendingRef.current) return;
+    setMicError("");
     const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("このブラウザーは音声認識に対応していません。");
+      alert("このブラウザは音声認識に対応していません。");
       return;
     }
 
@@ -55,7 +60,11 @@ function Mic() {
         finalChunks.filter(Boolean).forEach(addSegment);
       };
       recognition.onerror = (event) => {
-        if (event.error !== "no-speech" && event.error !== "aborted") alert(`音声認識エラー: ${event.error}`);
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          setMicError("音声入力が許可されていません。ブラウザのサイト設定と端末の設定で、マイク・音声認識を許可してください。");
+        } else if (event.error !== "no-speech" && event.error !== "aborted") {
+          setMicError(`音声認識エラー: ${event.error}`);
+        }
         setIsListening(false);
       };
       recognition.onend = () => setIsListening(false);
@@ -66,10 +75,28 @@ function Mic() {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      setInterimText("");
-      recognitionRef.current.lang = speechLanguage;
-      recognitionRef.current.start();
-      setIsListening(true);
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        setMicError("マイクを使用するには、HTTPSでこのページを開いてください。");
+        return;
+      }
+      permissionPendingRef.current = true;
+      setIsRequestingPermission(true);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+        setInterimText("");
+        recognitionRef.current.lang = speechLanguage;
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        const name = error instanceof DOMException ? error.name : "";
+        setMicError(name === "NotAllowedError"
+          ? "マイクが許可されていません。ブラウザーのサイト設定と端末の設定でマイクを許可し、もう一度ボタンを押してください。"
+          : "音声入力を開始できませんでした。マイクの接続や、他のアプリで使用中でないか確認してください。");
+      } finally {
+        permissionPendingRef.current = false;
+        setIsRequestingPermission(false);
+      }
     }
   };
 
@@ -87,9 +114,17 @@ function Mic() {
         targetLanguage={translationLanguage}
         interimText={interimText}
       />
-      <button className="rounded-full bg-blue-600 px-2 py-2 text-white cursor-pointer" onClick={handleClick}>
+      <button
+        type="button"
+        className="rounded-full bg-blue-600 px-2 py-2 text-white cursor-pointer disabled:opacity-50"
+        onClick={handleClick}
+        disabled={isRequestingPermission}
+        aria-label={isListening ? "音声入力を停止" : "マイクを許可して音声入力を開始"}
+      >
         <MyIcon name={isListening ? "mic-listening" : "mic-idle"} color="white" size={24} />
       </button>
+      {isRequestingPermission && <p className="text-sm text-muted-foreground" role="status">マイクの使用を許可してください。</p>}
+      {micError && <p className="max-w-sm text-sm text-destructive" role="alert">{micError}</p>}
     </div>
   );
 }

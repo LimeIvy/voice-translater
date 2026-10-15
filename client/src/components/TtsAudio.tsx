@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { MyIcon } from "./Icons";
 import { useQuery } from "@tanstack/react-query";
-import { cancelTts, enqueueTts } from "../lib/ttsPlayback";
+import { cancelTts, enqueueTts, prepareTts, unlockTts } from "../lib/ttsPlayback";
+import type { Playback } from "../lib/ttsPlayback";
 
 type Props = { text: string; createdAt: number; index: number };
 
 export function TtsAudio({ text, createdAt, index }: Props) {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const playbackRef = useRef<Playback | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackError, setPlaybackError] = useState("");
   const { data, error, isPending } = useQuery({
     queryKey: ["tts", createdAt, index, text],
     staleTime: Infinity,
@@ -33,42 +35,50 @@ export function TtsAudio({ text, createdAt, index }: Props) {
   });
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!data || !audio) return;
-    const url = URL.createObjectURL(data);
-    audio.src = url;
-    enqueueTts(audio);
+    if (!data) return;
+    let disposed = false;
+    void prepareTts(data).then((buffer) => {
+      if (disposed) return;
+      const item: Playback = {
+        buffer,
+        onPlaying: (playing) => {
+          setIsPlaying(playing);
+          if (playing) setPlaybackError("");
+        },
+        onBlocked: () => setPlaybackError("再生ボタンを押して音声を有効にしてください。"),
+      };
+      playbackRef.current = item;
+      enqueueTts(item);
+    }).catch(() => {
+      if (!disposed) setPlaybackError("音声を読み込めませんでした。");
+    });
     return () => {
-      cancelTts(audio);
-      audio.removeAttribute("src");
-      audio.load();
-      URL.revokeObjectURL(url);
+      disposed = true;
+      if (playbackRef.current) cancelTts(playbackRef.current);
+      playbackRef.current = null;
     };
-  }, [data, error, isPending]);
+  }, [data]);
 
   if (isPending) return <p className="mt-2 text-xs text-muted-foreground" role="status">音声を生成中…</p>;
   if (error) return <p className="mt-2 text-xs text-destructive" role="alert">{error.message}</p>;
   return data ? (
     <>
-      <audio
-        ref={audioRef}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-      />
       <button
         type="button"
         className="mt-2 inline-flex size-8 items-center justify-center rounded-full border hover:bg-blue-100"
-        aria-label={isPlaying ? "読み上げを一時停止" : "翻訳文を再生"}
+        aria-label={isPlaying ? "読み上げを停止" : "翻訳文を再生"}
         onClick={() => {
-          const audio = audioRef.current;
-          if (!audio) return;
-          if (audio.paused) enqueueTts(audio);
-          else audio.pause();
+          const item = playbackRef.current;
+          if (!item) return;
+          if (isPlaying) cancelTts(item);
+          else {
+            void unlockTts().then(() => enqueueTts(item)).catch(item.onBlocked);
+          }
         }}
       >
         {isPlaying ? <MyIcon name="pause" size={16}/> : <MyIcon name="play" size={16}/>}
       </button>
+      {playbackError && <p className="text-xs text-muted-foreground" role="status">{playbackError}</p>}
     </>
   ) : null;
 }

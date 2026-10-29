@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { unlockTts } from "../lib/ttsPlayback";
-import { MyIcon } from "./Icons";
-import LanguageSelect from "./LanguageSelect";
-import { Translation } from "./Translation";
-import { useTranslationStore } from "../store/translation";
+import { unlockTts } from "../../common/tts/ttsPlayback";
+import { MyIcon } from "../../common/components/Icons";
+import LanguageSelect from "../../common/components/LanguageSelect";
+import { Translation } from "../../common/translation/Translation";
+import { useTranslationStore } from "../../common/translation/translationStore";
 
 type Recognition = {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
-  onresult: ((event: Event & { resultIndex: number; results: SpeechRecognitionResultList }) => void) | null;
+  onresult:
+    | ((
+        event: Event & {
+          resultIndex: number;
+          results: SpeechRecognitionResultList;
+        },
+      ) => void)
+    | null;
   onerror: ((event: Event & { error: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
@@ -38,27 +45,33 @@ function Mic() {
   const recognitionRef = useRef<Recognition | null>(null);
   const addSegment = useTranslationStore((state) => state.addSegment);
 
-  useEffect(() => () => {
-    const recognition = recognitionRef.current;
-    if (!recognition) return;
-    recognition.onresult = null;
-    recognition.onerror = null;
-    recognition.onend = null;
-    recognition.abort();
-  }, []);
+  useEffect(
+    () => () => {
+      const recognition = recognitionRef.current;
+      if (!recognition) return;
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      recognition.abort();
+    },
+    [],
+  );
 
   const handleClick = () => {
     if (permissionPendingRef.current || isStopping) return;
     setMicError("");
     void unlockTts().catch(() => {
-      setMicError("自動再生を有効にできませんでした。翻訳後に再生ボタンを押してください。");
+      setMicError(
+        "自動再生を有効にできませんでした。翻訳後に再生ボタンを押してください。",
+      );
     });
     if (recognitionRef.current) {
       setIsStopping(true);
       recognitionRef.current.stop();
       return;
     }
-    const SpeechRecognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("このブラウザは音声認識に対応していません。");
       return;
@@ -80,8 +93,13 @@ function Mic() {
         finalChunks.filter(Boolean).forEach(addSegment);
       };
       recognition.onerror = (event) => {
-        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          setMicError("音声入力が許可されていません。ブラウザのサイト設定と端末の設定で、マイク・音声認識を許可してください。");
+        if (
+          event.error === "not-allowed" ||
+          event.error === "service-not-allowed"
+        ) {
+          setMicError(
+            "音声入力が許可されていません。ブラウザのサイト設定と端末の設定で、マイク・音声認識を許可してください。",
+          );
         } else if (event.error !== "no-speech" && event.error !== "aborted") {
           setMicError(`音声認識エラー: ${event.error}`);
         }
@@ -98,8 +116,6 @@ function Mic() {
       recognitionRef.current = recognition;
     }
 
-    // Start within the tap handler; awaiting getUserMedia can lose user activation
-    // on mobile browsers. SpeechRecognition requests microphone access itself.
     if (!window.isSecureContext) {
       recognitionRef.current = null;
       setMicError("マイクを使用するには、HTTPSでこのページを開いてください。");
@@ -115,7 +131,9 @@ function Mic() {
     } catch {
       recognitionRef.current = null;
       setIsListening(false);
-      setMicError("音声入力を開始できませんでした。マイクの許可を確認して、もう一度ボタンを押してください。");
+      setMicError(
+        "音声入力を開始できませんでした。マイクの許可を確認して、もう一度ボタンを押してください。",
+      );
     } finally {
       permissionPendingRef.current = false;
       setIsRequestingPermission(false);
@@ -128,9 +146,12 @@ function Mic() {
         <p>発話言語</p>
         <LanguageSelect value={speechLanguage} onChange={setSpeechLanguage} />
         <p>翻訳言語</p>
-        <LanguageSelect value={translationLanguage} onChange={setTranslationLanguage} />
+        <LanguageSelect
+          value={translationLanguage}
+          onChange={setTranslationLanguage}
+        />
       </div>
-      
+
       <Translation
         sourceLanguage={speechLanguage}
         targetLanguage={translationLanguage}
@@ -141,13 +162,31 @@ function Mic() {
         className="rounded-full bg-blue-600 px-2 py-2 text-white cursor-pointer disabled:opacity-50"
         onClick={handleClick}
         disabled={isRequestingPermission || isStopping}
-        aria-label={isListening ? "音声入力を停止" : "マイクを許可して音声入力を開始"}
+        aria-label={
+          isListening ? "音声入力を停止" : "マイクを許可して音声入力を開始"
+        }
       >
-        <MyIcon name={isListening ? "mic-listening" : "mic-idle"} color="white" size={24} />
+        <MyIcon
+          name={isListening ? "mic-listening" : "mic-idle"}
+          color="white"
+          size={24}
+        />
       </button>
-      {isRequestingPermission && <p className="text-sm text-muted-foreground" role="status">マイクの使用を許可してください。</p>}
-      {isStopping && <p className="text-sm text-muted-foreground" role="status">音声入力を停止中…</p>}
-      {micError && <p className="max-w-sm text-sm text-destructive" role="alert">{micError}</p>}
+      {isRequestingPermission && (
+        <p className="text-sm text-muted-foreground" role="status">
+          マイクの使用を許可してください。
+        </p>
+      )}
+      {isStopping && (
+        <p className="text-sm text-muted-foreground" role="status">
+          音声入力を停止中…
+        </p>
+      )}
+      {micError && (
+        <p className="max-w-sm text-sm text-destructive" role="alert">
+          {micError}
+        </p>
+      )}
     </div>
   );
 }

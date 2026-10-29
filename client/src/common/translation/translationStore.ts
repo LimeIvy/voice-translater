@@ -15,9 +15,13 @@ type TranslationStore = {
 
 export const useTranslationStore = create<TranslationStore>((set) => ({
   segments: [],
-  addSegment: (text) => set((state) => ({
-    segments: [...state.segments, { text, translation: "", createdAt: Date.now() }],
-  })),
+  addSegment: (text) =>
+    set((state) => ({
+      segments: [
+        ...state.segments,
+        { text, translation: "", createdAt: Date.now() },
+      ],
+    })),
   setTranslation: (index, translation) => set((state) => ({
     segments: state.segments.map((segment, i) =>
       i === index ? { ...segment, translation } : segment,

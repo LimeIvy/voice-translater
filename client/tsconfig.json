@@ -7,7 +7,7 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
-      "cn": ["./src/lib/utils.ts"]
+      "cn": ["./src/common/lib/utils.ts"]
     },
     "moduleResolution": "bundler",
     "resolvePackageJsonImports": true

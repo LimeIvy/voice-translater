@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useTranslationStore } from "../store/translation";
-import { TtsAudio } from "./TtsAudio";
+import { useTranslationStore } from "../../common/translation/translationStore";
+import { TtsAudio } from "../../common/tts/TtsAudio";
 
 type Props = { errors?: (string | undefined)[]; interimText?: string };
 
@@ -28,26 +28,39 @@ export function TranslateHistory({ errors = [], interimText = "" }: Props) {
               </p>
               <p
                 className={`mt-0.5 whitespace-pre-wrap wrap-break-word text-lg leading-snug ${
-                  segment.translation ? "text-slate-900" : errors[index] ? "text-destructive" : "text-slate-500"
+                  segment.translation
+                    ? "text-slate-900"
+                    : errors[index]
+                      ? "text-destructive"
+                      : "text-slate-500"
                 }`}
               >
                 {segment.translation || errors[index] || "翻訳中…"}
               </p>
               {segment.translation && (
-                <TtsAudio text={segment.translation} createdAt={segment.createdAt} index={index} />
+                <TtsAudio
+                  text={segment.translation}
+                  createdAt={segment.createdAt}
+                  index={index}
+                />
               )}
             </div>
             <time
               dateTime={new Date(segment.createdAt).toISOString()}
               className="mt-1 block text-right text-[10px] text-muted-foreground"
             >
-              {new Date(segment.createdAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+              {new Date(segment.createdAt).toLocaleTimeString("ja-JP", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </time>
           </article>
         ))}
         {interimText && (
           <div className="ml-auto max-w-[90%] rounded-xl border border-dashed border-blue-200 bg-blue-50/50 px-4 py-3">
-            <p className="whitespace-pre-wrap wrap-break-word text-xs leading-relaxed text-muted-foreground">{interimText}</p>
+            <p className="whitespace-pre-wrap wrap-break-word text-xs leading-relaxed text-muted-foreground">
+              {interimText}
+            </p>
           </div>
         )}
         <div ref={bottomRef} />

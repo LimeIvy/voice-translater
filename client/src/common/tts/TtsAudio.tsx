@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { MyIcon } from "./Icons";
+import { MyIcon } from "../components/Icons";
 import { useQuery } from "@tanstack/react-query";
-import { cancelTts, enqueueTts, prepareTts, unlockTts } from "../lib/ttsPlayback";
-import type { Playback } from "../lib/ttsPlayback";
+import { cancelTts, enqueueTts, prepareTts, unlockTts } from "./ttsPlayback";
+import type { Playback } from "./ttsPlayback";
 
 type Props = { text: string; createdAt: number; index: number };
 
@@ -27,8 +27,14 @@ export function TtsAudio({ text, createdAt, index }: Props) {
         signal,
       });
       if (!response.ok) {
-        const body = await response.json().catch(() => null) as { detail?: unknown } | null;
-        throw new Error(typeof body?.detail === "string" ? body.detail : "音声生成に失敗しました。");
+        const body = (await response.json().catch(() => null)) as {
+          detail?: unknown;
+        } | null;
+        throw new Error(
+          typeof body?.detail === "string"
+            ? body.detail
+            : "音声生成に失敗しました。",
+        );
       }
       return response.blob();
     },
@@ -37,21 +43,24 @@ export function TtsAudio({ text, createdAt, index }: Props) {
   useEffect(() => {
     if (!data) return;
     let disposed = false;
-    void prepareTts(data).then((buffer) => {
-      if (disposed) return;
-      const item: Playback = {
-        buffer,
-        onPlaying: (playing) => {
-          setIsPlaying(playing);
-          if (playing) setPlaybackError("");
-        },
-        onBlocked: () => setPlaybackError("再生ボタンを押して音声を有効にしてください。"),
-      };
-      playbackRef.current = item;
-      enqueueTts(item);
-    }).catch(() => {
-      if (!disposed) setPlaybackError("音声を読み込めませんでした。");
-    });
+    void prepareTts(data)
+      .then((buffer) => {
+        if (disposed) return;
+        const item: Playback = {
+          buffer,
+          onPlaying: (playing) => {
+            setIsPlaying(playing);
+            if (playing) setPlaybackError("");
+          },
+          onBlocked: () =>
+            setPlaybackError("再生ボタンを押して音声を有効にしてください。"),
+        };
+        playbackRef.current = item;
+        enqueueTts(item);
+      })
+      .catch(() => {
+        if (!disposed) setPlaybackError("音声を読み込めませんでした。");
+      });
     return () => {
       disposed = true;
       if (playbackRef.current) cancelTts(playbackRef.current);
@@ -59,8 +68,18 @@ export function TtsAudio({ text, createdAt, index }: Props) {
     };
   }, [data]);
 
-  if (isPending) return <p className="mt-2 text-xs text-muted-foreground" role="status">音声を生成中…</p>;
-  if (error) return <p className="mt-2 text-xs text-destructive" role="alert">{error.message}</p>;
+  if (isPending)
+    return (
+      <p className="mt-2 text-xs text-muted-foreground" role="status">
+        音声を生成中…
+      </p>
+    );
+  if (error)
+    return (
+      <p className="mt-2 text-xs text-destructive" role="alert">
+        {error.message}
+      </p>
+    );
   return data ? (
     <>
       <button
@@ -72,13 +91,23 @@ export function TtsAudio({ text, createdAt, index }: Props) {
           if (!item) return;
           if (isPlaying) cancelTts(item);
           else {
-            void unlockTts().then(() => enqueueTts(item)).catch(item.onBlocked);
+            void unlockTts()
+              .then(() => enqueueTts(item))
+              .catch(item.onBlocked);
           }
         }}
       >
-        {isPlaying ? <MyIcon name="pause" size={16}/> : <MyIcon name="play" size={16}/>}
+        {isPlaying ? (
+          <MyIcon name="pause" size={16} />
+        ) : (
+          <MyIcon name="play" size={16} />
+        )}
       </button>
-      {playbackError && <p className="text-xs text-muted-foreground" role="status">{playbackError}</p>}
+      {playbackError && (
+        <p className="text-xs text-muted-foreground" role="status">
+          {playbackError}
+        </p>
+      )}
     </>
   ) : null;
 }

@@ -7,7 +7,7 @@
     "types": ["vite/client"],
     "paths": {
       "@/*": ["./src/*"],
-      "cn": ["./src/lib/utils.ts"]
+      "cn": ["./src/common/lib/utils.ts"]
     },
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,

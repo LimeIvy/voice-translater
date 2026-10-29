@@ -1,4 +1,4 @@
-import { speechLanguages } from "@/data/speechLanguages";
+import { speechLanguages } from "@/common/data/speechLanguages";
 import {
   Select,
   SelectContent,
@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/common/components/ui/select";
 
 type LanguageSelectProps = {
   value: string;

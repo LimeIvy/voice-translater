@@ -1,5 +1,6 @@
 
 mod model_manager;
+mod recorder;
 
 use std::sync::Mutex;
 
@@ -160,6 +161,7 @@ pub fn run() {
         .manage(ServerState {
             child: Mutex::new(None),
         })
+        .manage(recorder::RecorderState::default())
         .invoke_handler(tauri::generate_handler![
             model_manager::list_models,
             model_manager::download_model,
@@ -168,6 +170,9 @@ pub fn run() {
             start_server,
             stop_server,
             check_server_health,
+            recorder::list_input_devices,
+            recorder::start_recording,
+            recorder::stop_recording,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

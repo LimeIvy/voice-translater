@@ -1,39 +1,47 @@
+import { ListBox, Select } from "@heroui/react";
 import { speechLanguages } from "@/common/data/speechLanguages";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/common/components/ui/select";
+import { LANGUAGES } from "@/common/constants/languages";
 
 type LanguageSelectProps = {
   value: string;
   onChange: (language: string) => void;
 };
 
+type SpeechLanguage = (typeof speechLanguages)[number];
+
 function LanguageSelect({ value, onChange }: LanguageSelectProps) {
   return (
-    <Select
-      items={speechLanguages.map((item) => ({ value: item.code, label: item.name }))}
-      value={value}
-      onValueChange={(nextValue) => {
-        if (typeof nextValue === "string") onChange(nextValue);
+    <Select<SpeechLanguage, "single">
+      aria-label="言語"
+      placeholder="言語を選択"
+      selectedKey={value}
+      onSelectionChange={(key) => {
+        if (key !== null) onChange(String(key));
       }}
     >
-      <SelectTrigger className="w-45">
-        <SelectValue placeholder="言語を選択" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {speechLanguages.map((item) => (
-            <SelectItem key={item.code} value={item.code}>
-              {item.name}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
+      <Select.Trigger className="w-45">
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+
+      <Select.Popover>
+        <ListBox<SpeechLanguage> items={speechLanguages}>
+          {(item) => (
+            <ListBox.Item id={item.code} textValue={item.name}>
+              <span className="flex items-center gap-2">
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  className="h-4 w-6 shrink-0 rounded-sm object-cover"
+                  src={`/flags/${LANGUAGES.find(({ code }) => item.code.startsWith(`${code}-`))?.flag}.png`}
+                />
+                <span>{item.name}</span>
+              </span>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          )}
+        </ListBox>
+      </Select.Popover>
     </Select>
   );
 }

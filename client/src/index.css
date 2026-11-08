@@ -1,44 +1,49 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "@heroui/styles";
+
+@font-face {
+  font-family: "App Sans";
+  src: url("/fonts/NotoSansCJKjp-VF.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: var(--font-app);
+
+  --color-button-text: var(--button-text);
+  --color-button-surface: var(--button-surface);
+  --color-button-muted: var(--button-muted);
+  --color-button-border: var(--button-border);
   --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-card: var(--background);
-  --color-accent: var(--secondary);
-  --color-accent-foreground: var(--secondary-foreground);
-  --color-border: var(--border);
-  --color-input: var(--border);
-  --color-ring: var(--primary);
-  --color-destructive: var(--destructive);
+  --color-primary-hover: var(--primary-hover);
+
+  --radius-button: var(--button-radius);
+
+  --shadow-primary:
+    0 4px 0 var(--primary-shadow),
+    0 6px 10px -3px color-mix(in srgb, var(--primary-shadow) 45%, transparent);
+  --shadow-secondary:
+    0 3px 0 var(--button-border),
+    0 5px 10px -3px color-mix(in srgb, var(--button-border) 70%, transparent);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #155dfc;
-  --primary-foreground: #ffffff;
-  --secondary: #eff6ff;
-  --secondary-foreground: #1e3a8a;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --border: #d1d5db;
-  --destructive: #dc2626;
+  --font-app: "App Sans", sans-serif;
+
+  --button-text: #102a43;
+  --button-surface: #ffffff;
+  --button-muted: #f7fafc;
+  --button-border: #ddebe8;
+
+  --primary: #42d99c;
+  --primary-hover: #35ca8e;
+  --primary-shadow: #20a66f;
+
+  --button-radius: 1rem;
 }
 
-@layer base {
-  body {
-    @apply bg-background text-foreground;
-  }
+html {
+  font-family: var(--font-app);
 }

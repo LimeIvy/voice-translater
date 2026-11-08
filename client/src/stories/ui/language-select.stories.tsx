@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import LanguageSelect from "../../common/components/LanguageSelect";
+import { type SpeechLanguageCode } from "../../common/data/speechLanguages";
 
 function LanguageSelectExample() {
-  const [speechLanguage, setSpeechLanguage] = useState("ja-JP");
-  const [translationLanguage, setTranslationLanguage] = useState("en-US");
+  const [speechLanguage, setSpeechLanguage] = useState<SpeechLanguageCode>("ja-JP");
+  const [translationLanguage, setTranslationLanguage] = useState<SpeechLanguageCode>("en-US");
 
   return (
     <div className="flex flex-col gap-4">

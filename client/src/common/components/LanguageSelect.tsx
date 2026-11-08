@@ -1,22 +1,25 @@
 import { ListBox, Select } from "@heroui/react";
-import { speechLanguages } from "@/common/data/speechLanguages";
+import { speechLanguages, type SpeechLanguageCode } from "@/common/data/speechLanguages";
 import { LANGUAGES } from "@/common/constants/languages";
 
 type LanguageSelectProps = {
-  value: string;
-  onChange: (language: string) => void;
+  value: SpeechLanguageCode;
+  onChange: (language: SpeechLanguageCode) => void;
 };
 
 type SpeechLanguage = (typeof speechLanguages)[number];
 
 function LanguageSelect({ value, onChange }: LanguageSelectProps) {
+
   return (
     <Select<SpeechLanguage, "single">
       aria-label="言語"
       placeholder="言語を選択"
       selectedKey={value}
       onSelectionChange={(key) => {
-        if (key !== null) onChange(String(key));
+        if (key !== null) {
+          onChange(String(key) as SpeechLanguageCode);
+        }
       }}
     >
       <Select.Trigger className="w-45">

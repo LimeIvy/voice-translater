@@ -8,4 +8,6 @@ export const speechLanguages = [
   { code: "fr-FR", name: "フランス語" },
   { code: "it-IT", name: "イタリア語" },
   { code: "ru-RU", name: "ロシア語" },
-];
+] as const;
+
+export type SpeechLanguageCode = (typeof speechLanguages)[number]["code"];

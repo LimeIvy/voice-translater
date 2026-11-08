@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import AppButton from "../../common/components/ui/button";
+import MicButton from "../../common/components/ui/mic-button";
 import type { SpeechLanguageCode } from "@/common/data/speechLanguages";
 
 type RecordingResult = {
@@ -23,8 +23,7 @@ export default function Mic({
   const [result, setResult] =
     useState<RecordingResult | null>(null);
 
-  const [isRecording, setIsRecording] =
-    useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const start = async () => {
     if (!deviceId) {
@@ -37,10 +36,9 @@ export default function Mic({
       deviceId,
     });
 
-    setIsRecording(true);
   };
 
-  const stop = async () => {
+  const end = async () => {
     const recording =
       await invoke<RecordingResult>(
         "stop_recording",
@@ -48,39 +46,35 @@ export default function Mic({
       );
 
     setResult(recording);
-    setIsRecording(false);
+  };
+
+  const handleRecordingChange = async (nextIsRecording: boolean) => {
+    setIsLoading(true);
+
+    try {
+      if (nextIsRecording) {
+        await start();
+      } else {
+        await end();
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <AppButton
-          isDisabled={!deviceId || isRecording}
-          onPress={start}
-        >
-          録音開始
-        </AppButton>
-
-        <AppButton
-          isDisabled={!isRecording}
-          onPress={stop}
-        >
-          録音停止
-        </AppButton>
-      </div>
-
       {result && (
         <div>
-          <p>
-            録音時間：
-            {result.durationSeconds.toFixed(1)}秒
-          </p>
-
-          <p>
-            文字起こし：{result.transcript}
-          </p>
+          <p>文字起こし：{result.transcript}</p>
         </div>
       )}
+      <div className="flex items-center justify-center gap-2">
+        <MicButton
+          isLoading={isLoading}
+          onRecordingChange={handleRecordingChange}
+        />
+      </div>
     </div>
   );
 }

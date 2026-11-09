@@ -2,6 +2,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import MicButton from "../../common/components/ui/mic-button";
 import type { SpeechLanguageCode } from "@/common/data/speechLanguages";
+import { useTranslationStore } from "@/common/translation/translationStore";
 
 type RecordingResult = {
   sampleCount: number;
@@ -24,6 +25,7 @@ export default function Mic({
     useState<RecordingResult | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
+  const addSegment = useTranslationStore((state) => state.addSegment);
 
   const start = async () => {
     if (!deviceId) {
@@ -46,6 +48,10 @@ export default function Mic({
       );
 
     setResult(recording);
+
+    if (recording.transcript.trim()) {
+      addSegment(recording.transcript);
+    }
   };
 
   const handleRecordingChange = async (nextIsRecording: boolean) => {
@@ -64,17 +70,10 @@ export default function Mic({
 
   return (
     <div className="space-y-4">
-      {result && (
-        <div>
-          <p>文字起こし：{result.transcript}</p>
-        </div>
-      )}
-      <div className="flex items-center justify-center gap-2">
-        <MicButton
-          isLoading={isLoading}
-          onRecordingChange={handleRecordingChange}
-        />
-      </div>
+      <MicButton
+        isLoading={isLoading}
+        onRecordingChange={handleRecordingChange}
+      />
     </div>
   );
 }

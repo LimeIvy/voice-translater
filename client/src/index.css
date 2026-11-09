@@ -18,6 +18,8 @@
   --color-button-border: var(--button-border);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-shadow: var(--primary-shadow);
+  --color-secondary: var(--secondary);
 
   --radius-button: var(--button-radius);
 
@@ -40,6 +42,7 @@
   --primary: #42d99c;
   --primary-hover: #35ca8e;
   --primary-shadow: #20a66f;
+  --secondary: #f1faf7;
 
   --button-radius: 1rem;
 }

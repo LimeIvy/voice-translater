@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useTranslationStore } from "../../common/translation/translationStore";
-import { TtsAudio } from "../../common/tts/TtsAudio";
 
 type Props = { errors?: (string | undefined)[]; interimText?: string };
 
@@ -37,13 +36,6 @@ export function TranslateHistory({ errors = [], interimText = "" }: Props) {
               >
                 {segment.translation || errors[index] || "翻訳中…"}
               </p>
-              {segment.translation && (
-                <TtsAudio
-                  text={segment.translation}
-                  createdAt={segment.createdAt}
-                  index={index}
-                />
-              )}
             </div>
             <time
               dateTime={new Date(segment.createdAt).toISOString()}

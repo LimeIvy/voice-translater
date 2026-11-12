@@ -21,9 +21,6 @@ export default function Mic({
   deviceId,
   language,
 }: MicProps) {
-  const [result, setResult] =
-    useState<RecordingResult | null>(null);
-
   const [isLoading, setIsLoading] = useState(false);
   const addSegment = useTranslationStore((state) => state.addSegment);
 
@@ -31,8 +28,6 @@ export default function Mic({
     if (!deviceId) {
       return;
     }
-
-    setResult(null);
 
     await invoke("start_recording", {
       deviceId,
@@ -46,8 +41,6 @@ export default function Mic({
         "stop_recording",
         { language },
       );
-
-    setResult(recording);
 
     if (recording.transcript.trim()) {
       addSegment(recording.transcript);

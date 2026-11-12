@@ -52,11 +52,43 @@ class TTSAppTests(unittest.TestCase):
             self.assertEqual(response.headers['access-control-allow-origin'], origin)
 
     def test_existing_tts_contract(self):
-        with patch('app.api.tts.synthesize', return_value=b'RIFFtest'):
+        with patch('app.api.tts.synthesize', return_value=b'RIFFtest') as synthesize:
             response = self.client.post('/api/v1/tts', json={'text': 'hello'})
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers['content-type'], 'audio/wav')
+            synthesize.assert_called_once_with('hello', 'my_voice')
         self.assertEqual(self.client.post('/api/v1/tts', json={'text': ' '}).status_code, 422)
+
+    def test_speaker_registration_is_idempotent(self):
+        with patch('app.api.speakers.speakers.register_speaker', return_value={'cached': False}) as register:
+            first = self.client.post(
+                '/api/v1/speakers',
+                files={'file': ('voice.wav', b'RIFFtest', 'audio/wav')},
+            )
+            second = self.client.post(
+                '/api/v1/speakers',
+                files={'file': ('voice.wav', b'RIFFtest', 'audio/wav')},
+            )
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        self.assertEqual(first.json()['data']['speaker_id'], second.json()['data']['speaker_id'])
+        self.assertEqual(register.call_count, 2)
+
+    def test_speaker_rejects_non_wav(self):
+        response = self.client.post(
+            '/api/v1/speakers',
+            files={'file': ('voice.mp3', b'ID3', 'audio/mpeg')},
+        )
+        self.assertEqual(response.status_code, 415)
+
+    def test_default_speaker_cannot_be_deleted(self):
+        self.assertEqual(self.client.delete('/api/v1/speakers/my_voice').status_code, 409)
+
+    def test_speaker_delete_forwards_to_tts(self):
+        with patch('app.api.speakers.speakers.delete_speaker', return_value={'deleted': True}) as delete:
+            response = self.client.delete('/api/v1/speakers/spk_test')
+        self.assertEqual(response.status_code, 204)
+        delete.assert_called_once_with('spk_test')
 
     def test_untrusted_origin_is_not_allowed(self):
         response = self.client.options('/api/v1/tts', headers={

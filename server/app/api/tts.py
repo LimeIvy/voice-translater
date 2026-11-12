@@ -13,7 +13,7 @@ def text_to_speech(request: TTSRequest) -> Response:
         raise HTTPException(status_code=422, detail="読み上げる文章を入力してください。")
 
     try:
-        audio = synthesize(request.text.strip())
+        audio = synthesize(request.text.strip(), request.speaker_id)
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except TimeoutError as error:

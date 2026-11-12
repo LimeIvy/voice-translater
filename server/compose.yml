@@ -1,6 +1,26 @@
 name: voice-translater
 
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      TTS_HOST: tts
+      TTS_PORT: "8765"
+      TTS_CORS_ORIGINS: ${TTS_CORS_ORIGINS:-}
+    ports:
+      - "127.0.0.1:${TTS_API_PORT:-8000}:8000"
+    depends_on:
+      tts:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=4).close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
   tts:
     image: cosyvoice-tts:1.0
 
@@ -18,8 +38,19 @@ services:
               count: 1
               capabilities: [gpu]
 
-    ports:
-      - "127.0.0.1:8765:8765"
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - |
+          import socket
+          with socket.create_connection(('127.0.0.1', 8765), timeout=2) as sock:
+              sock.sendall(bytes(4))
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 300s
 
     volumes:
       - type: bind

@@ -1,6 +1,8 @@
-import { Play } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useSpeech } from "@/common/tts/useSpeech";
 import type { TranslationSegment } from "@/common/translation/translationStore";
 import { getCurrentTime } from "@/common/lib/utils";
+import { SpeechButton } from "./speech-button";
 
 type TranslationBubbleProps = {
   segment?: TranslationSegment;
@@ -9,8 +11,29 @@ type TranslationBubbleProps = {
 };
 
 export function TranslationBubble({ segment, interimText, languageCode = "ja" }: TranslationBubbleProps) {
+  const { play, stop, status, error } = useSpeech();
   const text = segment?.text ?? interimText;
   const isSelf = (segment?.speaker ?? "self") === "self";
+  const translation = segment?.translation?.trim() ?? "";
+  const previousTranslationRef = useRef(translation);
+
+  useEffect(() => {
+    const previousTranslation = previousTranslationRef.current;
+    previousTranslationRef.current = translation;
+
+    if (
+      !segment ||
+      !isSelf ||
+      !translation ||
+      previousTranslation ||
+      previousTranslation === translation
+    ) {
+      return;
+    }
+
+    void play(translation);
+  }, [segment, isSelf, translation, play]);
+
   if (!text) return null;
 
   return (
@@ -27,9 +50,13 @@ export function TranslationBubble({ segment, interimText, languageCode = "ja" }:
           <div className="mt-1 flex flex-col items-start gap-2">
             <p className="text-lg font-bold leading-snug text-slate-900">{segment.translation || "翻訳中…"}</p>
             {isSelf && (
-              <button type="button" aria-label="音声を再生" className="rounded-full mt-1 text-primary hover:bg-primary/10 cursor-pointer">
-                <Play className="h-4 w-4" fill="currentColor" />
-              </button>
+              <SpeechButton
+                text={translation}
+                status={status}
+                error={error}
+                play={play}
+                stop={stop}
+              />
             )}
           </div>
         )}

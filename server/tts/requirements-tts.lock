@@ -31,7 +31,6 @@ cupy-cuda12x==13.6.0
 cycler==0.12.1
 cython==3.3.0
 decorator==5.3.1
-deepspeed==0.15.1
 depyf==0.19.0
 detect-installer==0.2.1
 diffusers==0.29.0
@@ -55,12 +54,9 @@ fonttools==4.65.0
 frozendict==2.4.7
 frozenlist==1.8.0
 fsspec==2024.12.0
-gdown==5.1.0
 gguf==0.19.0
 google-auth==2.58.0
 google-auth-oauthlib==1.0.0
-gradio==5.4.0
-gradio-client==1.4.2
 grpcio==1.57.0
 grpcio-tools==1.57.0
 h11==0.16.0
@@ -93,8 +89,8 @@ librosa==0.10.2
 lightning==2.2.4
 lightning-utilities==0.15.3
 llguidance==0.7.30
-llvmlite==0.44.0
 lm-format-enforcer==0.11.3
+llvmlite==0.44.0
 loguru==0.7.3
 markdown==3.10.3
 markdown-it-py==4.2.0
@@ -130,8 +126,6 @@ oauthlib==3.3.1
 omegaconf==2.3.0
 onnx==1.16.0
 onnxruntime-gpu==1.18.0
-openai==3.16.2
-openai-harmony==0.0.8
 openai-whisper==20250625
 opencv-python-headless==4.11.0.86
 orjson==3.12.0
@@ -169,7 +163,6 @@ pytorch-lightning==2.6.6
 pytz==2026.3.post1
 pyyaml==6.0.3
 pyzmq==27.2.0
-ray==2.58.0
 referencing==0.37.0
 regex==2026.9.10
 requests==2.34.2
@@ -198,11 +191,6 @@ soupsieve==2.9.2
 soxr==1.1.0
 starlette==0.41.3
 sympy==1.14.0
-tensorboard==2.14.0
-tensorboard-data-server==0.7.2
-tensorrt-cu12==10.13.3.9
-tensorrt-cu12-bindings==10.13.3.9
-tensorrt-cu12-libs==10.13.3.9
 threadpoolctl==3.7.0
 tiktoken==0.14.0
 tokenizers==0.22.2
@@ -224,7 +212,6 @@ tzdata==2026.4
 urllib3==2.8.0
 uvicorn==0.30.0
 uvloop==0.22.1
-vllm==0.11.0
 watchfiles==1.2.0
 websockets==12.0
 werkzeug==3.1.8
@@ -232,7 +219,7 @@ wetext==0.0.4
 wget==3.2
 wheel==0.48.0
 x-transformers==2.11.24
-xformers==0.0.32.post1
+vllm==0.11.0
 xgrammar==0.1.25
 yarl==1.25.1
 zipp==4.1.0

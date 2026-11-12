@@ -511,6 +511,7 @@ def initialize_cosyvoice():
 
     cosyvoice = AutoModel(
         model_dir=MODEL_PATH,
+        # The desktop app only needs serialized TTS requests.
         load_vllm=True,
         load_trt=False,
         fp16=False,

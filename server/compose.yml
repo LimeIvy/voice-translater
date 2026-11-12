@@ -1,7 +1,8 @@
-name: voice-translater
+name: peramo-voice-clone
 
 services:
   api:
+    image: peramo-voice-clone-api:1.0
     build:
       context: .
       dockerfile: Dockerfile.api
@@ -22,7 +23,7 @@ services:
     restart: unless-stopped
 
   tts:
-    image: cosyvoice-tts:1.0
+    image: peramo-voice-clone-tts:1.0
 
     build:
       context: ./tts

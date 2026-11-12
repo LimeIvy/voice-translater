@@ -11,7 +11,8 @@ services:
       TTS_PORT: "8765"
       TTS_CORS_ORIGINS: ${TTS_CORS_ORIGINS:-}
     ports:
-      - "127.0.0.1:${TTS_API_PORT:-8000}:8000"
+      # Tailscale経由で別PCから接続できるよう、ホストの全インターフェースで公開する。
+      - "${TTS_API_PORT:-8000}:8000"
     depends_on:
       tts:
         condition: service_healthy

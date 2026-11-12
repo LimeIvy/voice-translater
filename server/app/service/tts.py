@@ -33,7 +33,7 @@ def recv_packet(sock: socket.socket) -> bytes | None:
     return recv_exact(sock, size)
 
 
-def synthesize(text: str) -> bytes:
+def synthesize(text: str, speaker_id: str = "my_voice") -> bytes:
     host = os.getenv("TTS_HOST", "").strip()
     port_text = os.getenv("TTS_PORT", "").strip()
     if not host or not port_text:
@@ -51,7 +51,10 @@ def synthesize(text: str) -> bytes:
         with socket.create_connection((host, port), timeout=10) as sock:
             sock.settimeout(120)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            request = json.dumps({"text": text}, ensure_ascii=False).encode("utf-8")
+            request = json.dumps(
+                {"text": text, "speaker_id": speaker_id},
+                ensure_ascii=False,
+            ).encode("utf-8")
             sock.sendall(HEADER.pack(len(request)) + request)
 
             packet = recv_packet(sock)

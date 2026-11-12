@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, tts
+from app.api import health, speakers, tts
 
 load_dotenv()
 
@@ -31,6 +31,7 @@ app.add_middleware(
 )
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(tts.router, prefix="/api/v1")
+app.include_router(speakers.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/ready")

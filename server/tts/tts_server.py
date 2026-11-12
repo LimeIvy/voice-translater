@@ -6,6 +6,8 @@ import struct
 import sys
 import threading
 import time
+import base64
+import tempfile
 
 import numpy as np
 
@@ -183,6 +185,7 @@ def send_packet(
 def run_tts(
     conn: socket.socket,
     text: str,
+    speaker_id: str,
 ):
 
     print()
@@ -234,7 +237,7 @@ def run_tts(
             cosyvoice.inference_cross_lingual(
                 TTS_PREFIX + text,
                 "",
-                zero_shot_spk_id=SPEAKER_ID,
+                zero_shot_spk_id=speaker_id,
                 stream=True,
             )
         )
@@ -378,12 +381,47 @@ def handle_client(
             )
         )
 
+        request_type = request_data.get("type", "tts")
+        if request_type == "list_speakers":
+            send_packet(conn, json.dumps({"speakers": cosyvoice.list_available_spks()}).encode("utf-8"))
+            return
+
+        if request_type == "register_speaker":
+            speaker_id = str(request_data.get("speaker_id", "")).strip()
+            audio_base64 = request_data.get("audio_base64", "")
+            if not speaker_id or not isinstance(audio_base64, str):
+                raise ValueError("speaker_id and audio_base64 are required")
+            if speaker_id in cosyvoice.list_available_spks():
+                send_packet(conn, json.dumps({"speaker_id": speaker_id, "cached": True}).encode("utf-8"))
+                return
+            audio = base64.b64decode(audio_base64, validate=True)
+            if not audio or len(audio) > 10 * 1024 * 1024:
+                raise ValueError("invalid audio payload")
+            with tts_lock, tempfile.NamedTemporaryFile(suffix=".wav") as reference:
+                reference.write(audio)
+                reference.flush()
+                cosyvoice.add_zero_shot_spk("", reference.name, speaker_id)
+            send_packet(conn, json.dumps({"speaker_id": speaker_id, "cached": False}).encode("utf-8"))
+            return
+
+        if request_type == "delete_speaker":
+            speaker_id = str(request_data.get("speaker_id", "")).strip()
+            if speaker_id == SPEAKER_ID:
+                raise ValueError("the default speaker cannot be deleted")
+            with tts_lock:
+                deleted = cosyvoice.frontend.spk2info.pop(speaker_id, None) is not None
+            send_packet(conn, json.dumps({"speaker_id": speaker_id, "deleted": deleted}).encode("utf-8"))
+            return
+
         text = str(
             request_data.get(
                 "text",
                 "",
             )
         ).strip()
+        speaker_id = str(request_data.get("speaker_id", SPEAKER_ID)).strip() or SPEAKER_ID
+        if speaker_id not in cosyvoice.list_available_spks():
+            raise ValueError("speaker_id not found")
 
         if not text:
 
@@ -408,6 +446,7 @@ def handle_client(
         run_tts(
             conn,
             text,
+            speaker_id,
         )
 
     except Exception as e:
